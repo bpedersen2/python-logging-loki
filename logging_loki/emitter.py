@@ -15,7 +15,7 @@ from typing import Tuple
 import requests
 import rfc3339
 
-from classes.loki_logging import const
+from loki_logging import const
 
 BasicAuth = Optional[Tuple[str, str]]
 
