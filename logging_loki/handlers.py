@@ -9,7 +9,7 @@ from typing import Dict
 from typing import Optional
 from typing import Type
 
-from loki_logging import emitter, const
+from logging_loki import emitter, const
 
 
 class LokiQueueHandler(QueueHandler):
