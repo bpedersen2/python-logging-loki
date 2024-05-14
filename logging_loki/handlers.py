@@ -9,8 +9,7 @@ from typing import Dict
 from typing import Optional
 from typing import Type
 
-from logging_loki import const
-from logging_loki import emitter
+from classes.loki_logging import emitter, const
 
 
 class LokiQueueHandler(QueueHandler):
@@ -41,6 +40,7 @@ class LokiHandler(logging.Handler):
         url: str,
         tags: Optional[dict] = None,
         auth: Optional[emitter.BasicAuth] = None,
+        tenant_id: Optional[str] = None,
         version: Optional[str] = None,
     ):
         """
@@ -50,6 +50,7 @@ class LokiHandler(logging.Handler):
             url: Endpoint used to send log entries to Loki (e.g. `https://my-loki-instance/loki/api/v1/push`).
             tags: Default tags added to every log record.
             auth: Optional tuple with username and password for basic HTTP authentication.
+            tenant_id: Optional tenant id when Loki system is configured as a multi-tenant system
             version: Version of Loki emitter to use.
 
         """
@@ -67,7 +68,7 @@ class LokiHandler(logging.Handler):
         version = version or const.emitter_ver
         if version not in self.emitters:
             raise ValueError("Unknown emitter version: {0}".format(version))
-        self.emitter = self.emitters[version](url, tags, auth)
+        self.emitter = self.emitters[version](url, tags, auth, tenant_id)
 
     def handleError(self, record):  # noqa: N802
         """Close emitter and let default handler take actions on error."""

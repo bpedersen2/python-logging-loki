@@ -15,7 +15,7 @@ from typing import Tuple
 import requests
 import rfc3339
 
-from logging_loki import const
+from classes.loki_logging import const
 
 BasicAuth = Optional[Tuple[str, str]]
 
@@ -30,7 +30,7 @@ class LokiEmitter(abc.ABC):
     label_replace_with = const.label_replace_with
     session_class = requests.Session
 
-    def __init__(self, url: str, tags: Optional[dict] = None, auth: BasicAuth = None):
+    def __init__(self, url: str, tags: Optional[dict] = None, auth: BasicAuth = None, tenant_id: str = None):
         """
         Create new Loki emitter.
 
@@ -38,6 +38,7 @@ class LokiEmitter(abc.ABC):
             url: Endpoint used to send log entries to Loki (e.g. `https://my-loki-instance/loki/api/v1/push`).
             tags: Default tags added to every log record.
             auth: Optional tuple with username and password for basic HTTP authentication.
+            tenant_id: Optional tenant id when Loki is configured as a multi-tenant system
 
         """
         #: Tags that will be added to all records handled by this handler.
@@ -46,13 +47,15 @@ class LokiEmitter(abc.ABC):
         self.url = url
         #: Optional tuple with username and password for basic authentication.
         self.auth = auth
+        #: Optional tenant id when Loki is configured as a multi-tenant system
+        self.tenant_id = tenant_id
 
         self._session: Optional[requests.Session] = None
 
     def __call__(self, record: logging.LogRecord, line: str):
         """Send log record to Loki."""
         payload = self.build_payload(record, line)
-        resp = self.session.post(self.url, json=payload)
+        resp = self.session.post(self.url, json=payload, headers={"X-Scope-OrgID": self.tenant_id})
         if resp.status_code != self.success_response_code:
             raise ValueError("Unexpected Loki API response status code: {0}".format(resp.status_code))
 
